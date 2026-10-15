@@ -16,4 +16,7 @@ public class Customer {
     @Required  // A validation error will be shown if the name property is left empty
     String name;
 
+    @Embedded
+    Address address;
+
 }

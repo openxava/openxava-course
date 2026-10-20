@@ -1,6 +1,7 @@
 package com.yourcompany.invoicing.model;
 
 import java.time.*;
+import java.util.*;
 import jakarta.persistence.*;
 import org.openxava.annotations.*;
 import org.openxava.calculators.*;
@@ -30,6 +31,13 @@ public class Invoice {
     @Required
     @DefaultValueCalculator(CurrentLocalDateCalculator.class) // Current date
     LocalDate date;
+
+    @ManyToOne(fetch=FetchType.LAZY, optional=false) // Customer is required
+    Customer customer;
+
+    @ElementCollection
+    @ListProperties("product.number, product.description, quantity")
+    Collection<Detail> details;
 
     @TextArea
     String remarks;

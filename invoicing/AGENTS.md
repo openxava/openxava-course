@@ -10,6 +10,12 @@ always use `jakarta.*` imports** instead. For example:
 - `jakarta.servlet.*`, `jakarta.inject.*`, `jakarta.annotation.*`, `jakarta.ws.rs.*`,
   `jakarta.json.bind.*`, etc.
 
+## Verification
+
+After creating or modifying **any** Java file, **run `mvn -q compile`** to verify the
+project compiles before considering the task done. If compilation fails, fix the errors 
+before finishing.
+
 ## Conventions for JPA Entities
 
 When creating an entity in this project, follow these rules:
@@ -145,6 +151,62 @@ Common built-in calculators:
 If no built-in calculator fits, create a custom one implementing
 `org.openxava.calculators.ICalculator`.
 
+#### Injecting View Values into a Calculator (@PropertyValue)
+
+A custom calculator **can receive the current values of other properties shown in the
+view** before `calculate()` runs. Do this with the `properties` attribute of
+`@DefaultValueCalculator` and `org.openxava.annotations.PropertyValue`. For each
+`@PropertyValue(name="prop")`, OpenXava calls `setProp(currentViewValue)` on the
+calculator — so the calculator must declare a settable field named `prop` (use Lombok
+`@Getter @Setter`).
+
+This is the correct way to make a default value depend on other fields of the form.
+**Do NOT** hardcode `LocalDate.now()` or any other global state inside the calculator
+when the needed value already exists as a property in the entity.
+
+Example adapted from the OpenXava reference guide (`DetailsCountCalculator`), which
+receives `year` and `number` injected from the view and returns the number of details
+of that invoice — here rewritten with JPA:
+
+```java
+package com.yourcompany.invoicing.calculators;
+
+import org.openxava.calculators.*;
+import org.openxava.jpa.*;
+import lombok.*;
+
+public class DetailsCountCalculator implements ICalculator {
+
+    @Getter @Setter int year;   // Injected from the view before calculate() runs
+    @Getter @Setter int number; // Each field needs a public setter for injection
+
+    public Object calculate() throws Exception {
+        Long count = XPersistence.getManager().createQuery(
+            "select count(d) from Invoice i join i.details d " +
+            "where i.year = :year and i.number = :number", Long.class)
+            .setParameter("year", year)
+            .setParameter("number", number)
+            .getSingleResult();
+        return count.intValue();
+    }
+}
+```
+
+And in the entity:
+
+```java
+@DefaultValueCalculator(value=DetailsCountCalculator.class,
+    properties={
+        @PropertyValue(name="year"),   // Injects the value of 'year' into setYear()
+        @PropertyValue(name="number")  // Injects the value of 'number' into setNumber()
+    })
+int detailsCount;
+```
+
+`@PropertyValue` also supports `from="reference.prop"` to inject from a reference
+(e.g. `from="customer.number"`) and `value="FIXED"` to inject a constant.
+Reference: https://openxava.org/OpenXavaDoc/docs/model_en.html#Model-Properties-Default%20value%20calculator
+
 ### Master-Detail (Collections)
 
 When asked to create a master-detail structure, the detail collection in the master entity
@@ -224,6 +286,9 @@ public class InvoiceDetail {
   for default values
 - ❌ Do not assign default values with Java field initializers
   (e.g. `int year = LocalDate.now().getYear();`)
+- ✅ When a calculator needs values from other properties of the entity, inject them
+  with `@PropertyValue` in the `properties` attribute of `@DefaultValueCalculator`
+  (do not hardcode `LocalDate.now()` or global state inside the calculator)
 - ❌ Do not use `NextIntegerCalculator` / `NextLongCalculator` for sequential numbers
   (duplicates in multiuser)
 

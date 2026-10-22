@@ -46,6 +46,15 @@ public class MyEntity {
 }
 ```
 
+### Identifier Properties (@Id)
+
+When asked for an `id`, `oid`, or any property that is clearly the entity identifier, 
+**do not invent the format**. Unless the user explicitly says otherwise, look at the 
+existing entities in the project and **copy the 
+exact `@Id` definition used there**: same type, same generation strategy, same annotations, 
+same `@Column` length. Also the extra annotations, like `@Hidden`, `@GeneratedValue`, etc.
+
+
 ### Annotations Instead of Stereotypes
 
 `@Stereotype` is legacy. In new code **always use the equivalent annotation** (available since OpenXava 6.6). Reference: https://openxava.org/OpenXavaDoc/docs/model_es.html#Modelo-Propiedades-Estereotipo
@@ -80,6 +89,12 @@ public class MyEntity {
 
 Only use `@Stereotype` when there is no equivalent annotation (e.g. `BOLD_LABEL`, `IMAGE_LABEL`).
 
+### Column Length for Numeric Properties (int, long, etc.)
+
+Every numeric primitive property (`int`, `long`, etc.) **must have `@Column(length=N)`**, even when the database does not need it. OpenXava uses the length to size the input field when drawing it.
+
+- Choose `N` according to the property name and its typical number of digits.
+
 ### References (@ManyToOne / @OneToOne)
 
 When adding a reference (association to a single entity), **always use lazy fetching** by specifying `fetch=FetchType.LAZY` in `@ManyToOne` and `@OneToOne`.
@@ -93,6 +108,29 @@ Category category;
 @OneToOne(fetch=FetchType.LAZY)
 Address address;
 ```
+
+### Default Values (@DefaultValueCalculator)
+
+When a property needs a default value, **always use `@DefaultValueCalculator`** — never assign the value in Java with a field initializer (e.g. `int year = LocalDate.now().getYear();` is WRONG).
+
+- Reference: https://openxava.org/OpenXavaDoc/apidocs/org/openxava/annotations/DefaultValueCalculator.html
+- Built-in calculators: https://openxava.org/OpenXavaDoc/apidocs/org/openxava/calculators/package-summary.html
+- Calculator classes are in `org.openxava.calculators` — import them.
+
+Common built-in calculators:
+
+| Need | Calculator |
+|---|---|
+| Current year | `CurrentYearCalculator.class` |
+| Current month | `CurrentMonthCalculator.class` |
+| Current date (`LocalDate`) | `CurrentLocalDateCalculator.class` |
+| Current date (`java.util.Date`) | `CurrentDateCalculator.class` |
+| Current timestamp (`java.sql.Timestamp`) | `CurrentTimestampCalculator.class` |
+| Current user name | `CurrentUserCalculator.class` (plus `CurrentUserNickNameCalculator`, `CurrentUserEmailCalculator`, etc.) |
+| `true` / `false` | `TrueCalculator` / `FalseCalculator` |
+
+
+If no built-in calculator fits, create a custom one implementing `org.openxava.calculators.ICalculator`.
 
 ### Master-Detail (Collections)
 
@@ -113,8 +151,10 @@ import java.util.*;
 public class Invoice {
 
     @Id
-    @GeneratedValue(strategy=GenerationType.IDENTITY)
-    int id;
+    @Hidden
+    @GeneratedValue(strategy=GenerationType.UUID)
+    @Column(length=36)
+    String oid;
 
     @Column(length=50)
     @Required
@@ -141,6 +181,7 @@ public class InvoiceDetail {
     @Column(length=50)
     String product;
 
+    @Column(length=5)
     int quantity;
 
     @Money
@@ -154,11 +195,16 @@ public class InvoiceDetail {
 - ✅ Use `@ElementCollection` + `@Embeddable` for master-detail collections
 - ✅ Use `fetch=FetchType.LAZY` in `@ManyToOne` and `@OneToOne`
 - ✅ Use `import` statements instead of fully qualified class names
+- ✅ Add `@Column(length=N)` to every numeric primitive (`int`, `long`...) with a length that fits the property name, even if the database does not need it
+- ✅ Copy the `@Id` definition from the existing entities in the project; do not invent a different format unless explicitly asked
 - ❌ Do not use `private` on fields
 - ❌ Do not write getters/setters manually
 - ❌ Do not use `@OneToMany` / `@Entity` for detail collections
 - ❌ Do not use `@ManyToOne` / `@OneToOne` without `fetch=FetchType.LAZY`
 - ❌ Do not use `@Stereotype` when an equivalent annotation exists (`@Money`, `@TextArea`, `@Files`, `@File`, etc.)
+- ✅ Use `@DefaultValueCalculator` (e.g. `CurrentYearCalculator`, `CurrentLocalDateCalculator`) for default values
+- ❌ Do not assign default values with Java field initializers (e.g. `int year = LocalDate.now().getYear();`)
+- ❌ Do not use `NextIntegerCalculator` / `NextLongCalculator` for sequential numbers (duplicates in multiuser)
 
 ## Conventions for Actions
 

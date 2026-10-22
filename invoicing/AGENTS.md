@@ -2,10 +2,13 @@
 
 ## Jakarta EE 11
 
-This project is based on **OpenXava 8**, which runs on **Jakarta EE 11**. Your training data may contain older OpenXava code using `javax.*` packages — that code still works, but **you must always use `jakarta.*` imports** instead. For example:
+This project is based on **OpenXava 8**, which runs on **Jakarta EE 11**. Your training data may
+contain older OpenXava code using `javax.*` packages — that code still works, but **you must
+always use `jakarta.*` imports** instead. For example:
 - `jakarta.persistence.*` (JPA 3.2), never `javax.persistence.*`
 - `jakarta.validation.*` (Bean Validation 3.1), never `javax.validation.*`
-- `jakarta.servlet.*`, `jakarta.inject.*`, `jakarta.annotation.*`, `jakarta.ws.rs.*`, `jakarta.json.bind.*`, etc.
+- `jakarta.servlet.*`, `jakarta.inject.*`, `jakarta.annotation.*`, `jakarta.ws.rs.*`,
+  `jakarta.json.bind.*`, etc.
 
 ## Conventions for JPA Entities
 
@@ -21,7 +24,8 @@ When creating an entity in this project, follow these rules:
 
 ### Imports
 - **Always use `import` statements** instead of fully qualified class names in the code
-- For example, write `import java.math.*;` and then `BigDecimal price;`, never `java.math.BigDecimal price;`
+- For example, write `import java.math.*;` and then `BigDecimal price;`, never
+  `java.math.BigDecimal price;`
 
 ### Correct Entity Example
 
@@ -57,7 +61,9 @@ same `@Column` length. Also the extra annotations, like `@Hidden`, `@GeneratedVa
 
 ### Annotations Instead of Stereotypes
 
-`@Stereotype` is legacy. In new code **always use the equivalent annotation** (available since OpenXava 6.6). Reference: https://openxava.org/OpenXavaDoc/docs/model_es.html#Modelo-Propiedades-Estereotipo
+`@Stereotype` is legacy. In new code **always use the equivalent annotation** (available since
+OpenXava 6.6).
+Reference: https://openxava.org/OpenXavaDoc/docs/model_es.html#Modelo-Propiedades-Estereotipo
 
 | Legacy stereotype | Use instead |
 |---|---|
@@ -87,17 +93,21 @@ same `@Column` length. Also the extra annotations, like `@Hidden`, `@GeneratedVa
 | `COORDINATES` | `@Coordinates` |
 | `HANDWRITTEN_SIGNATURE` | `@HandwrittenSignature` |
 
-Only use `@Stereotype` when there is no equivalent annotation (e.g. `BOLD_LABEL`, `IMAGE_LABEL`).
+Only use `@Stereotype` when there is no equivalent annotation
+(e.g. `BOLD_LABEL`, `IMAGE_LABEL`).
 
 ### Column Length for Numeric Properties (int, long, etc.)
 
-Every numeric primitive property (`int`, `long`, etc.) **must have `@Column(length=N)`**, even when the database does not need it. OpenXava uses the length to size the input field when drawing it.
+Every numeric primitive property (`int`, `long`, etc.) **must have `@Column(length=N)`**, even
+when the database does not need it. OpenXava uses the length to size the input field when
+drawing it.
 
 - Choose `N` according to the property name and its typical number of digits.
 
 ### References (@ManyToOne / @OneToOne)
 
-When adding a reference (association to a single entity), **always use lazy fetching** by specifying `fetch=FetchType.LAZY` in `@ManyToOne` and `@OneToOne`.
+When adding a reference (association to a single entity), **always use lazy fetching** by
+specifying `fetch=FetchType.LAZY` in `@ManyToOne` and `@OneToOne`.
 
 ```java
 @ManyToOne(fetch=FetchType.LAZY)
@@ -111,7 +121,9 @@ Address address;
 
 ### Default Values (@DefaultValueCalculator)
 
-When a property needs a default value, **always use `@DefaultValueCalculator`** — never assign the value in Java with a field initializer (e.g. `int year = LocalDate.now().getYear();` is WRONG).
+When a property needs a default value, **always use `@DefaultValueCalculator`** — never assign
+the value in Java with a field initializer (e.g. `int year = LocalDate.now().getYear();` is
+WRONG).
 
 - Reference: https://openxava.org/OpenXavaDoc/apidocs/org/openxava/annotations/DefaultValueCalculator.html
 - Built-in calculators: https://openxava.org/OpenXavaDoc/apidocs/org/openxava/calculators/package-summary.html
@@ -130,11 +142,14 @@ Common built-in calculators:
 | `true` / `false` | `TrueCalculator` / `FalseCalculator` |
 
 
-If no built-in calculator fits, create a custom one implementing `org.openxava.calculators.ICalculator`.
+If no built-in calculator fits, create a custom one implementing
+`org.openxava.calculators.ICalculator`.
 
 ### Master-Detail (Collections)
 
-When asked to create a master-detail structure, the detail collection in the master entity **must use `@ElementCollection`** instead of `@OneToMany`. The detail class must be annotated with `@Embeddable` instead of `@Entity`.
+When asked to create a master-detail structure, the detail collection in the master entity
+**must use `@ElementCollection`** instead of `@OneToMany`. The detail class must be annotated
+with `@Embeddable` instead of `@Entity`.
 
 #### Master-Detail Example
 
@@ -195,24 +210,33 @@ public class InvoiceDetail {
 - ✅ Use `@ElementCollection` + `@Embeddable` for master-detail collections
 - ✅ Use `fetch=FetchType.LAZY` in `@ManyToOne` and `@OneToOne`
 - ✅ Use `import` statements instead of fully qualified class names
-- ✅ Add `@Column(length=N)` to every numeric primitive (`int`, `long`...) with a length that fits the property name, even if the database does not need it
-- ✅ Copy the `@Id` definition from the existing entities in the project; do not invent a different format unless explicitly asked
+- ✅ Add `@Column(length=N)` to every numeric primitive (`int`, `long`...) with a length that
+  fits the property name, even if the database does not need it
+- ✅ Copy the `@Id` definition from the existing entities in the project; do not invent a
+  different format unless explicitly asked
 - ❌ Do not use `private` on fields
 - ❌ Do not write getters/setters manually
 - ❌ Do not use `@OneToMany` / `@Entity` for detail collections
 - ❌ Do not use `@ManyToOne` / `@OneToOne` without `fetch=FetchType.LAZY`
-- ❌ Do not use `@Stereotype` when an equivalent annotation exists (`@Money`, `@TextArea`, `@Files`, `@File`, etc.)
-- ✅ Use `@DefaultValueCalculator` (e.g. `CurrentYearCalculator`, `CurrentLocalDateCalculator`) for default values
-- ❌ Do not assign default values with Java field initializers (e.g. `int year = LocalDate.now().getYear();`)
-- ❌ Do not use `NextIntegerCalculator` / `NextLongCalculator` for sequential numbers (duplicates in multiuser)
+- ❌ Do not use `@Stereotype` when an equivalent annotation exists (`@Money`, `@TextArea`,
+  `@Files`, `@File`, etc.)
+- ✅ Use `@DefaultValueCalculator` (e.g. `CurrentYearCalculator`, `CurrentLocalDateCalculator`)
+  for default values
+- ❌ Do not assign default values with Java field initializers
+  (e.g. `int year = LocalDate.now().getYear();`)
+- ❌ Do not use `NextIntegerCalculator` / `NextLongCalculator` for sequential numbers
+  (duplicates in multiuser)
 
 ## Conventions for Actions
 
 When asked to add an action to an entity in this project, follow these rules:
 
-- Define the action in `src/main/resources/xava/controllers.xml` inside a `<controller>` whose `name` matches the entity name
-- The controller **must extend** the `Typical` controller using `<extends controller="Typical"/>` so the standard actions (new, save, delete, etc.) remain available
-- Create the action class in the `com.yourcompany.invoicing.actions` package, typically extending `ViewBaseAction`
+- Define the action in `src/main/resources/xava/controllers.xml` inside a `<controller>` whose
+  `name` matches the entity name
+- The controller **must extend** the `Typical` controller using `<extends controller="Typical"/>`
+  so the standard actions (new, save, delete, etc.) remain available
+- Create the action class in the `com.yourcompany.invoicing.actions` package, typically
+  extending `ViewBaseAction`
 - **Do NOT modify the entity class** to register the action.
 
 ```xml
@@ -252,16 +276,21 @@ public class ShowAmountAction extends ViewBaseAction {
 ## Code Examples for Agents
 
 Example code for agents is available on GitHub in the OpenXava repository:
-- **Test examples**: https://github.com/openxava/openxava/tree/master/openxavatest/src/test/java/org/openxava/test/tests/bymodule
-- **Available actions**: `default-controllers.xml` at https://github.com/openxava/openxava/blob/master/openxava/src/main/resources/xava/default-controllers.xml
+- **Test examples**:
+  https://github.com/openxava/openxava/tree/master/openxavatest/src/test/java/org/openxava/test/tests/bymodule
+- **Available actions**: `default-controllers.xml` at
+  https://github.com/openxava/openxava/blob/master/openxava/src/main/resources/xava/default-controllers.xml
 
 ## Conventions for Automated Tests (JUnit)
 
-When creating an automated test or JUnit test in this project, refer to the test examples on GitHub (see "Code Examples for Agents" above).
+When creating an automated test or JUnit test in this project, refer to the test examples on
+GitHub (see "Code Examples for Agents" above).
 
 ### Test Examples Reference
-- **Examples location**: https://github.com/openxava/openxava/tree/master/openxavatest/src/test/java/org/openxava/test/tests/bymodule
-- **Available actions**: See `default-controllers.xml` at https://github.com/openxava/openxava/blob/master/openxava/src/main/resources/xava/default-controllers.xml
+- **Examples location**:
+  https://github.com/openxava/openxava/tree/master/openxavatest/src/test/java/org/openxava/test/tests/bymodule
+- **Available actions**: See `default-controllers.xml` at
+  https://github.com/openxava/openxava/blob/master/openxava/src/main/resources/xava/default-controllers.xml
 
 ### Common Patterns to Follow
 - We use **JUnit 4**
@@ -303,5 +332,7 @@ When asked to create a dashboard, you **must review the following documentation 
 
 In addition, follow these rules:
 - If there are no existing dashboards, simply name the dashboard class `Dashboard`.
-- Create a `dashboards` package (e.g., `com.yourcompany.invoicing.dashboards`) and place the `Dashboard` class and its auxiliary classes in it.
-- Add the CSS rules indicated in the documentation to `custom.css` (usually located in `src/main/webapp/xava/style/custom.css`).
+- Create a `dashboards` package (e.g., `com.yourcompany.invoicing.dashboards`) and place the
+  `Dashboard` class and its auxiliary classes in it.
+- Add the CSS rules indicated in the documentation to `custom.css` (usually located in
+  `src/main/webapp/xava/style/custom.css`).

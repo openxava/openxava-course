@@ -18,10 +18,12 @@ public class Invoice {
     String oid;
 
     @Column(length=4)
+    @Required
     @DefaultValueCalculator(CurrentYearCalculator.class) // Current year
     int year;
 
     @Column(length=6)
+    @Required
     @DefaultValueCalculator(value=NextNumberForYearCalculator.class,
             properties=@PropertyValue(name="year") // To inject the value of year from Invoice to
             // the calculator before calling calculate()

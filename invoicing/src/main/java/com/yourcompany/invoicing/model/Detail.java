@@ -8,7 +8,7 @@ public class Detail {
 
     int quantity;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     Product product;
 
 }

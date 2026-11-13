@@ -9,6 +9,14 @@ import lombok.*;
 import com.yourcompany.invoicing.calculators.*;
 
 @Entity @Getter @Setter
+@View(members= // This view has no name, so it will be the view used by default
+    """
+    year, number, date;
+    customer;
+    details;
+    remarks
+    """
+)
 public class Invoice {
 
     @Id
@@ -34,7 +42,8 @@ public class Invoice {
     @DefaultValueCalculator(CurrentLocalDateCalculator.class) // Current date
     LocalDate date;
 
-    @ManyToOne(fetch=FetchType.LAZY, optional=false) // Customer is required
+    @ManyToOne(fetch=FetchType.LAZY, optional=false)
+    @ReferenceView("Simple") // The view named 'Simple' is used to display this reference
     Customer customer;
 
     @ElementCollection

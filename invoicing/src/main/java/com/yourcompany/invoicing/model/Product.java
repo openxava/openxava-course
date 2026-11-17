@@ -15,6 +15,10 @@ public class Product {
     @Column(length=50) @Required
     String description;
 
+    @ManyToOne(fetch=FetchType.LAZY)
+    @DescriptionsList
+    Author author;
+
     @ManyToOne( // The reference is persisted as a database relationship
             fetch=FetchType.LAZY, // The reference is loaded on demand
             optional=true) // The reference can have no value

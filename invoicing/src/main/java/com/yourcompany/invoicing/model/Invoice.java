@@ -17,13 +17,7 @@ import com.yourcompany.invoicing.calculators.*;
     remarks
     """
 )
-public class Invoice {
-
-    @Id
-    @GeneratedValue(strategy=GenerationType.UUID)
-    @Hidden
-    @Column(length=36)
-    String oid;
+public class Invoice extends Identifiable {
 
     @Column(length=4)
     @Required

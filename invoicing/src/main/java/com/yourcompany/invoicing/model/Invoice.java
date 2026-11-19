@@ -1,50 +1,13 @@
 package com.yourcompany.invoicing.model;
 
-import java.time.*;
 import java.util.*;
 import jakarta.persistence.*;
-import org.openxava.annotations.*;
-import org.openxava.calculators.*;
 import lombok.*;
-import com.yourcompany.invoicing.calculators.*;
 
 @Entity @Getter @Setter
-@View(members= // This view has no name, so it will be the view used by default
-    """
-    year, number, date;
-    customer;
-    details;
-    remarks
-    """
-)
-public class Invoice extends Identifiable {
+public class Invoice extends CommercialDocument {
 
-    @Column(length=4)
-    @Required
-    @DefaultValueCalculator(CurrentYearCalculator.class) // Current year
-    int year;
-
-    @Column(length=6)
-    @Required
-    @DefaultValueCalculator(value=NextNumberForYearCalculator.class,
-            properties=@PropertyValue(name="year") // To inject the value of year from Invoice to
-            // the calculator before calling calculate()
-    )
-    int number;
-
-    @Required
-    @DefaultValueCalculator(CurrentLocalDateCalculator.class) // Current date
-    LocalDate date;
-
-    @ManyToOne(fetch=FetchType.LAZY, optional=false)
-    @ReferenceView("Simple") // The view named 'Simple' is used to display this reference
-    Customer customer;
-
-    @ElementCollection
-    @ListProperties("product.number, product.description, quantity")
-    Collection<Detail> details;
-
-    @TextArea
-    String remarks;
+    @OneToMany(mappedBy="invoice")
+    Collection<Order> orders; // Collection of Order entities added
 
 }

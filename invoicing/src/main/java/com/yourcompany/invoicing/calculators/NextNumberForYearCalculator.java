@@ -10,14 +10,14 @@ public class NextNumberForYearCalculator implements ICalculator { // A calculato
     @Getter @Setter // To be publicly accessible
     int year; // This value will be injected before calculating
 
-    public Object calculate() throws Exception { // It does the calculation
-        Query query = XPersistence.getManager() // A JPA query
-                .createQuery("select max(i.number) from Invoice i where i.year = :year"); // The query returns
-        // the max invoice number of the indicated year
-        query.setParameter("year", year); // We use the injected year as a parameter for the query
+    public Object calculate() throws Exception {
+        Query query = XPersistence.getManager().createQuery(
+                "select max(i.number) from " +
+                        "CommercialDocument i " + // CommercialDocument instead of Invoice
+                        "where i.year = :year");
+        query.setParameter("year", year);
         Integer lastNumber = (Integer) query.getSingleResult();
-        return lastNumber == null ? 1 : lastNumber + 1; // Returns the last invoice number
-        // of the year + 1 or 1 if there is no last number
+        return lastNumber == null?1:lastNumber + 1;
     }
 
 }
